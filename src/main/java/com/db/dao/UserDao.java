@@ -2,8 +2,8 @@ package com.db.dao;
 
 import com.db.domain.User;
 import org.springframework.dao.EmptyResultDataAccessException;
+
 import java.sql.*;
-import java.util.Map;
 
 public class UserDao {
     private ConnectionMaker cm;
@@ -16,39 +16,38 @@ public class UserDao {
         this.cm = cm;
     }
 
-    public void add(final User user) {
+    public void jdbcContextWithStatementStrategy(StatementStrategy stmt) {
         Connection c = null;
         PreparedStatement ps = null;
         try {
             c = cm.makeConnection();
-            PreparedStatement pstmt = c.prepareStatement("INSERT INTO users(id, name, password) VALUES(?,?,?);");
-            pstmt.setString(1, user.getId());
-            pstmt.setString(2, user.getName());
-            pstmt.setString(3, user.getPassword());
-
-            pstmt.executeUpdate();
-
-            pstmt.close();
-            c.close();
-
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+            ps = stmt.ps(c);
+            ps.executeUpdate();
         } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
             if (ps != null) {
                 try {
                     ps.close();
                 } catch (SQLException e) {
+                    throw new RuntimeException(e);
                 }
             }
             if (c != null) {
                 try {
                     c.close();
                 } catch (SQLException e) {
+                    throw new RuntimeException(e);
                 }
             }
         }
+    }
+
+    public void add(final User user) {
+        StatementStrategy stmt = new AddStrategy(user);
+        jdbcContextWithStatementStrategy(stmt);
     }
 
     public User findById(String id) {
@@ -101,38 +100,15 @@ public class UserDao {
     }
 
     public void deleteAll() {
-        Connection c = null;
-        PreparedStatement ps = null;
-
-        try {
-            c = cm.makeConnection();
-            ps = c.prepareStatement("DELETE From users");
-            ps.executeUpdate();
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (ps != null) {
-                try {
-                    ps.close();
-                } catch (SQLException e) {
-                }
-            }
-            if (c != null) {
-                try {
-                    c.close();
-                } catch (SQLException e) {
-                }
-            }
-        }
+       StatementStrategy stmt = new DeleteAllStrategy();
+       jdbcContextWithStatementStrategy(stmt);
     }
 
-    public int getCount() throws SQLException, ClassNotFoundException {
+    public int getCount() {
         Connection c = null;
         PreparedStatement ps = null;
-
         ResultSet rs = null;
+
         int count = 0;
         try {
             c = cm.makeConnection();
@@ -146,19 +122,19 @@ public class UserDao {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
-            if(rs != null) {
+            if (rs != null) {
                 try {
                     rs.close();
                 } catch (SQLException e) {
                 }
             }
-            if(ps != null) {
+            if (ps != null) {
                 try {
                     ps.close();
                 } catch (SQLException e) {
                 }
             }
-            if(c != null) {
+            if (c != null) {
                 try {
                     c.close();
                 } catch (SQLException e) {

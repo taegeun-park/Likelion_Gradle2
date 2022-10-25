@@ -37,9 +37,9 @@ class UserDaoTest {
 
         assertEquals(0, userDao.getCount());
         String id = "1";
-        User userNull = userDao.findById(id);
-        assertEquals("taegeun", userNull.getName());
-        assertEquals("0525", userNull.getPassword());
+//        User userNull = userDao.findById(id);
+//        assertEquals("taegeun", userNull.getName());
+//        assertEquals("0525", userNull.getPassword());
         userDao.add(user1);
         assertEquals(1, userDao.getCount());
 
