@@ -6,12 +6,19 @@ import java.sql.*;
 import java.util.Map;
 
 public class UserDao {
+    private ConnectionMaker cm;
+    public UserDao() {
+        this.cm = new AwsConnectionMaker();
+    }
+    public UserDao(ConnectionMaker cm) {
+        this.cm = cm;
+    }
+
     public void add(User user) {
         Map<String, String> env = System.getenv();
         try {
             // DB접속 (ex sql workbeanch실행)
-            Connection c = ConnectionMaker();
-
+            Connection c = cm.makeConnection();
             // Query문 작성
             PreparedStatement pstmt = c.prepareStatement("INSERT INTO users(id, name, password) VALUES(?,?,?);");
             pstmt.setString(1, user.getId());
@@ -24,7 +31,7 @@ public class UserDao {
             pstmt.close();
             c.close();
 
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
@@ -34,8 +41,7 @@ public class UserDao {
         Connection c;
         try {
             // DB접속 (ex sql workbeanch실행)
-            c = DriverManager.getConnection(env.get("DB_HOST"),
-                    env.get("DB_USER"), env.get("DB_PASSWORD"));
+            c = cm.makeConnection();
 
             // Query문 작성
             PreparedStatement pstmt = c.prepareStatement("SELECT * FROM users WHERE id = ?");
@@ -53,7 +59,7 @@ public class UserDao {
 
             return user;
 
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
