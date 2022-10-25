@@ -7,9 +7,11 @@ import java.util.Map;
 
 public class UserDao {
     private ConnectionMaker cm;
+
     public UserDao() {
         this.cm = new AwsConnectionMaker();
     }
+
     public UserDao(ConnectionMaker cm) {
         this.cm = cm;
     }
@@ -56,5 +58,30 @@ public class UserDao {
         } catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void deleteAll() throws SQLException, ClassNotFoundException {
+        Connection c = cm.makeConnection();
+
+        PreparedStatement ps = c.prepareStatement("DELETE From users");
+        ps.executeUpdate();
+
+        ps.close();
+        c.close();
+    }
+
+    public int getCount() throws SQLException, ClassNotFoundException {
+        Connection c = cm.makeConnection();
+
+        PreparedStatement ps = c.prepareStatement("select count(*) from users");
+
+        ResultSet rs = ps.executeQuery();
+        rs.next();
+        int count = rs.getInt(1);
+
+        rs.close();
+        ps.close();
+        c.close();
+        return count;
     }
 }
